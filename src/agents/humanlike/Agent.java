@@ -7,7 +7,7 @@ import engine.helper.MarioActions;
 
 import java.nio.charset.StandardCharsets;
 
-import static engine.core.MarioForwardModel.OBS_QUESTION_BLOCK;
+import static engine.core.MarioForwardModel.*;
 
 public class Agent implements MarioAgent {
 
@@ -19,13 +19,15 @@ public class Agent implements MarioAgent {
         action[MarioActions.LEFT.getValue()] = true;
     }
 
+
+
     private boolean underQuestionBlock(MarioForwardModel model, byte[][] scene) {
 
         int[] marioTilePos = model.getMarioScreenTilePos();
         int marioX = marioTilePos[0];
         int marioY = marioTilePos[1];
 
-        for (int dx = -2; dx <= 2; dx++) {
+        for (int dx = -1; dx <= 1; dx++) {
             for (int dy = 1; dy <= 15; dy++) {
                 int checkX = marioX + dx;
                 int checkY = marioY - dy;
@@ -33,7 +35,7 @@ public class Agent implements MarioAgent {
                 if (checkX < 0 || checkX >= model.obsGridWidth || checkY < 0) continue;
                 int[][] levelScene = model.getMarioSceneObservation();
                 int Object = levelScene[checkX][checkY];
-                if (Object == OBS_QUESTION_BLOCK) {
+                if ((Object == OBS_QUESTION_BLOCK)) {
                     System.out.println("Under question block");
                     return true;
                 }
@@ -109,6 +111,11 @@ public class Agent implements MarioAgent {
 
         } else {
             action[MarioActions.JUMP.getValue()] = false;
+        }
+
+
+        if(!model.isMarioOnGround()){
+            action[MarioActions.JUMP.getValue()] = true;
         }
 
         return action;
