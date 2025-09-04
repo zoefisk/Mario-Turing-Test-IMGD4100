@@ -5,9 +5,14 @@ import engine.core.MarioForwardModel;
 import engine.core.MarioTimer;
 import engine.helper.MarioActions;
 
+import java.nio.charset.StandardCharsets;
+
+import static engine.core.MarioForwardModel.OBS_QUESTION_BLOCK;
+
 public class Agent implements MarioAgent {
 
     private boolean[] action = new boolean[MarioActions.numberOfActions()];
+    private int jumpCount = 0; // counter to determine if you've done a 'full' jump yet
 
     private void runAway() {
         action[MarioActions.RIGHT.getValue()] = false;
@@ -15,17 +20,21 @@ public class Agent implements MarioAgent {
     }
 
     private boolean underQuestionBlock(MarioForwardModel model, byte[][] scene) {
-        int marioX = model.obsGridWidth / 2;
-        int marioY = model.obsGridHeight / 2;
+
+        int[] marioTilePos = model.getMarioScreenTilePos();
+        int marioX = marioTilePos[0];
+        int marioY = marioTilePos[1];
 
         for (int dx = -2; dx <= 2; dx++) {
-            for (int dy = 1; dy <= 3; dy++) {
+            for (int dy = 1; dy <= 15; dy++) {
                 int checkX = marioX + dx;
                 int checkY = marioY - dy;
 
                 if (checkX < 0 || checkX >= model.obsGridWidth || checkY < 0) continue;
-
-                if (scene[checkX][checkY] == MarioForwardModel.OBS_QUESTION_BLOCK) {
+                int[][] levelScene = model.getMarioSceneObservation();
+                int Object = levelScene[checkX][checkY];
+                if (Object == OBS_QUESTION_BLOCK) {
+                    System.out.println("Under question block");
                     return true;
                 }
             }
@@ -33,7 +42,6 @@ public class Agent implements MarioAgent {
 
         return false;
     }
-
 
     // stolen from glennHartmann
     private boolean dangerFromEnemies(byte[][] enemiesFromBitmap) {
@@ -70,7 +78,10 @@ public class Agent implements MarioAgent {
     @Override
     public void initialize(MarioForwardModel model, MarioTimer timer) {
         action = new boolean[MarioActions.numberOfActions()];
+
+        // Mario always starts walking to the right as the game starts.
         action[MarioActions.RIGHT.getValue()] = true;
+        action[MarioActions.SPEED.getValue()] = false;
     }
 
     @Override
@@ -78,15 +89,27 @@ public class Agent implements MarioAgent {
         byte[][] levelSceneFromBitmap = decode(model, model.getMarioSceneObservation()); // map of the scene
         byte[][] enemiesFromBitmap = decode(model, model.getMarioEnemiesObservation()); // map of enemies
 
-        if (dangerFromEnemies(enemiesFromBitmap)) {
-            runAway();
-        }
-
-//        if (underQuestionBlock(model, levelSceneFromBitmap) && model.mayMarioJump()) {
-//            action[MarioActions.JUMP.getValue()] = true;
-//        } else {
-//            action[MarioActions.JUMP.getValue()] = false;
+//        if (dangerFromEnemies(enemiesFromBitmap)) {
+//            runAway();
 //        }
+
+//        // if jump is active and jumpCount is too big, deactivate - jump is over and
+//        // you'll need to get ready for next one
+//        if (action[MarioActions.JUMP.getValue()] && jumpCount >= 8) {
+//            action[MarioActions.JUMP.getValue()] = false;
+//            jumpCount = 0;
+//        }
+//        // otherwise you're in the middle of jump, increment jumpCount
+//        else if (action[MarioActions.JUMP.getValue()]) {
+//            jumpCount++;
+//        }
+
+        if (underQuestionBlock(model, levelSceneFromBitmap) && model.mayMarioJump()) {
+            action[MarioActions.JUMP.getValue()] = true;
+
+        } else {
+            action[MarioActions.JUMP.getValue()] = false;
+        }
 
         return action;
     }
@@ -94,7 +117,3 @@ public class Agent implements MarioAgent {
     @Override
     public String getAgentName() { return "HumanlikeAgent"; }
 }
-
-
-// if Mario detects an enemy, stop for 0.5-1 seconds to decide what to do.
-    // jump on top of enemy and kill it
