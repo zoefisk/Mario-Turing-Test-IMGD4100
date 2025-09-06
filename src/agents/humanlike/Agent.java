@@ -19,7 +19,39 @@ public class Agent implements MarioAgent {
         action[MarioActions.LEFT.getValue()] = true;
     }
 
+    private boolean obstaclesIncoming(byte[][] levelSceneFromBitmap) {
+        for (int y = 8; y <= 8; y++) {
+            for (int x = 9; x <= 12; x++) {
+                if (levelSceneFromBitmap[x][y] == 1) {
+                    System.out.println("obstacle incoming");
+                    return true;
+                }
+            }
+        }
 
+        return false;
+    }
+
+    private boolean obstacleIncoming(MarioForwardModel model, byte[][] scene){
+
+        byte[][] levelSceneFromBitmap = decode(model, model.getMarioSceneObservation());
+        int[] marioTilePos = model.getMarioScreenTilePos();
+        int marioX = marioTilePos[0];
+        int marioY = marioTilePos[1];
+
+        for (int dx = 1; dx < 3; dx++) {
+            int checkX = marioX + dx;
+
+            int[][] levelScene = model.getMarioSceneObservation();
+            int object = levelSceneFromBitmap[checkX][marioY];
+            if (object == 2){
+                System.out.println("Pipe incoming");
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private boolean underQuestionBlock(MarioForwardModel model, byte[][] scene) {
 
@@ -36,7 +68,7 @@ public class Agent implements MarioAgent {
                 int[][] levelScene = model.getMarioSceneObservation();
                 int Object = levelScene[checkX][checkY];
                 if ((Object == OBS_QUESTION_BLOCK)) {
-                    System.out.println("Under question block");
+                    //System.out.println("Under question block");
                     return true;
                 }
             }
@@ -113,6 +145,11 @@ public class Agent implements MarioAgent {
             action[MarioActions.JUMP.getValue()] = false;
         }
 
+        if (obstaclesIncoming(levelSceneFromBitmap) && model.mayMarioJump()){
+            action[MarioActions.JUMP.getValue()] = true;
+        }
+
+       // if (())
 
         if(!model.isMarioOnGround()){
             action[MarioActions.JUMP.getValue()] = true;
