@@ -6,6 +6,7 @@ import engine.core.MarioTimer;
 import engine.helper.MarioActions;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import static engine.core.MarioForwardModel.*;
 
@@ -17,6 +18,17 @@ public class Agent implements MarioAgent {
     private void runAway() {
         action[MarioActions.RIGHT.getValue()] = false;
         action[MarioActions.LEFT.getValue()] = true;
+    }
+
+    private boolean dangerFromGaps(byte[][] levelSceneFromBitmap) {
+        for (int y = 9; y <= 10; y++) {
+            for (int x = 9; x <= 12; x++) {
+                if (levelSceneFromBitmap[x][y] == 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean obstaclesIncoming(byte[][] levelSceneFromBitmap) {
@@ -52,15 +64,22 @@ public class Agent implements MarioAgent {
 
         return false;
     }
-
+    //check if a question block is present
     private boolean underQuestionBlock(MarioForwardModel model, byte[][] scene) {
 
         int[] marioTilePos = model.getMarioScreenTilePos();
         int marioX = marioTilePos[0];
         int marioY = marioTilePos[1];
+        int maxDetect;
 
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = 1; dy <= 15; dy++) {
+        if (action[MarioActions.SPEED.getValue()] == false){
+            maxDetect = 1;
+        } else {
+            maxDetect = 2;
+        }
+
+        for (int dx = -1; dx <= maxDetect; dx++) {
+            for (int dy = 1; dy <= 18; dy++) {
                 int checkX = marioX + dx;
                 int checkY = marioY - dy;
 
@@ -78,6 +97,7 @@ public class Agent implements MarioAgent {
     }
 
     // stolen from glennHartmann
+    // check if an enemy is close
     private boolean dangerFromEnemies(byte[][] enemiesFromBitmap) {
         for (int y = 7; y <= 9; y++) {
             for (int x = 8; x <= 12; x++) {
@@ -109,6 +129,20 @@ public class Agent implements MarioAgent {
         return dstate;
     }
 
+    //stolen from Glenn Hartmann
+    //Checks if a solid tile is in front of you
+    private boolean block(byte[][] levelSceneFromBitmap) {
+        for (int y = 8; y <= 8; y++) {
+            for (int x = 9; x <= 12; x++) {
+                if (levelSceneFromBitmap[x][y] == 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public void initialize(MarioForwardModel model, MarioTimer timer) {
         action = new boolean[MarioActions.numberOfActions()];
@@ -116,6 +150,8 @@ public class Agent implements MarioAgent {
         // Mario always starts walking to the right as the game starts.
         action[MarioActions.RIGHT.getValue()] = true;
         action[MarioActions.SPEED.getValue()] = false;
+
+       long startTime = timer.getRemainingTime();
     }
 
     @Override
@@ -123,35 +159,42 @@ public class Agent implements MarioAgent {
         byte[][] levelSceneFromBitmap = decode(model, model.getMarioSceneObservation()); // map of the scene
         byte[][] enemiesFromBitmap = decode(model, model.getMarioEnemiesObservation()); // map of enemies
 
-//        if (dangerFromEnemies(enemiesFromBitmap)) {
-//            runAway();
-//        }
-
-//        // if jump is active and jumpCount is too big, deactivate - jump is over and
-//        // you'll need to get ready for next one
-//        if (action[MarioActions.JUMP.getValue()] && jumpCount >= 8) {
-//            action[MarioActions.JUMP.getValue()] = false;
-//            jumpCount = 0;
-//        }
-//        // otherwise you're in the middle of jump, increment jumpCount
-//        else if (action[MarioActions.JUMP.getValue()]) {
-//            jumpCount++;
-//        }
-
+        //jump to hit a question block
         if (underQuestionBlock(model, levelSceneFromBitmap) && model.mayMarioJump()) {
             action[MarioActions.JUMP.getValue()] = true;
-
         } else {
             action[MarioActions.JUMP.getValue()] = false;
         }
 
+        //Jump over obstacles
         if (obstaclesIncoming(levelSceneFromBitmap) && model.mayMarioJump()){
+            action[MarioActions.JUMP.getValue()] = true;
+            action[MarioActions.RIGHT.getValue()] = true;
+        }
+
+        //Determine whether or not to run
+        if ((!dangerFromEnemies(enemiesFromBitmap) && !obstaclesIncoming(levelSceneFromBitmap))){
+            action[MarioActions.SPEED.getValue()] = true;
+        } else {
+            action[MarioActions.SPEED.getValue()] = false;
+        }
+
+        //ensures that jump is held
+        if(!model.isMarioOnGround()){
             action[MarioActions.JUMP.getValue()] = true;
         }
 
-       // if (())
+        //moves over if blocked
+        if (block(levelSceneFromBitmap)){
+            action[MarioActions.RIGHT.getValue()] = false;
+            action[MarioActions.LEFT.getValue()] = true;
+        } else {
+            action[MarioActions.RIGHT.getValue()] = true;
+            action[MarioActions.LEFT.getValue()] = false;
+        }
 
-        if(!model.isMarioOnGround()){
+        //jump over gaps
+        if ((dangerFromGaps(levelSceneFromBitmap)) && model.mayMarioJump()){
             action[MarioActions.JUMP.getValue()] = true;
         }
 
