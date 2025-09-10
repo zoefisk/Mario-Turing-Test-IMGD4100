@@ -21,7 +21,6 @@ public class MarioActionHelper {
     public static void walkRight(boolean[] action) {
         action[MarioActions.RIGHT.getValue()] = true;
         action[MarioActions.LEFT.getValue()] = false;
-        action[MarioActions.SPEED.getValue()] = false;
     }
 
     /**

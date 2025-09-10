@@ -7,7 +7,6 @@ import engine.helper.MarioActions;
 
 import static agents.humanlike.MarioActionHelper.*;
 import static agents.humanlike.MarioDetectionHelper.*;
-import static engine.core.MarioForwardModel.*;
 
 public class Agent implements MarioAgent {
 
@@ -22,9 +21,14 @@ public class Agent implements MarioAgent {
     private static final int STOMP_JUMP_HOLD = 4;   // shorter jump
     private static final int OBSTACLE_JUMP_HOLD = 12; // longer jump
     private int bonkCounter = 0;      // used only inside BONKING state machine
+    private int jumpCounter = 0;
     private int maxJumpHold = OBSTACLE_JUMP_HOLD;
     private long walkStartTime = -1;           // when we started walking left
     private static final long WALK_DURATION_MS = 2000; // 2 seconds
+
+
+
+    private boolean prioritizeObstacles = true;
 
     /**
      * Decode the observation from int[][] to byte[][] for easier processing.
@@ -55,6 +59,7 @@ public class Agent implements MarioAgent {
     public void initialize(MarioForwardModel model, MarioTimer timer) {
         action = new boolean[MarioActions.numberOfActions()];
         walkRight(action);
+
     }
 
     @Override
@@ -68,46 +73,57 @@ public class Agent implements MarioAgent {
             // Idle state: walk right, look for enemies or obstacles
             case IDLE:
 
+                prioritizeObstacles = true;
+                action[MarioActions.SPEED.getValue()] = false;
+
                 // Check for block above to bonk
                 if (underQuestionBlock(model, levelSceneFromBitmap) && model.mayMarioJump()) {
                     state = State.BONKING;
                     bonkPhase = BonkPhase.PAUSING;
                     bonkCounter = 0;
                     standStill(action);
-                    System.out.println("Detected block above, preparing bonk...");
+                    break;
+                }
+
+               if ((obstaclesIncoming(levelSceneFromBitmap)) || block(levelSceneFromBitmap)){
+                    state = State.CLEARING;
                     break;
                 }
 
                 // Check for enemies
-                else if (dangerFromEnemies(enemiesFromBitmap)) {
+                if (dangerFromEnemies(enemiesFromBitmap)) {
                     state = State.PREPARING;
                     walkStartTime = System.currentTimeMillis();
-                    walkLeft(action);
-                    System.out.println("Enemy spotted, prepping stomp...");
+                    //walkLeft(action);
+                    prioritizeObstacles = false;
+                    break;
                 }
 
-                // Check for gaps or obstacles
-                else if (dangerFromGaps(levelSceneFromBitmap) || block(levelSceneFromBitmap)) {
+                // Check for gaps
+                if (dangerFromGaps(levelSceneFromBitmap)) {
+                    System.out.println("Danger from gaps");
+                    standStill(action);
                     state = State.CLEARING;
-                    jumpHoldFrames = 0;
-                    action[MarioActions.JUMP.getValue()] = true;
-                    walkRight(action);
-                    maxJumpHold = OBSTACLE_JUMP_HOLD;
-                    System.out.println("Gap/obstacle detected! Clearing jump.");
+                    break;
                 }
 
                 // Continue walking right if nothing special
-                else {
-                    walkRight(action);
-                }
+                walkRight(action);
 
                 break;
+
 
             // Preparing to stomp: walk left for a short duration or until close to en
             // This should be changed....
             case PREPARING:
-                long elapsed = System.currentTimeMillis() - walkStartTime;
-                if (elapsed > WALK_DURATION_MS || enemyAheadClose(enemiesFromBitmap)) {
+
+                System.out.println("Preparing to stomp");
+
+//                long elapsed = System.currentTimeMillis() - walkStartTime;
+
+
+                    System.out.println("Ready to stomp");
+
                     if (model.mayMarioJump() || model.isMarioOnGround()) {
                         state = State.STOMPING;
                         jumpHoldFrames = 0;
@@ -116,9 +132,6 @@ public class Agent implements MarioAgent {
                         maxJumpHold = STOMP_JUMP_HOLD;
                         System.out.println("Jumping to stomp enemy!");
                     }
-                } else {
-                    walkLeft(action);
-                }
                 break;
 
             // Stomping on enemies state: jump and move right, wait to land
@@ -133,24 +146,28 @@ public class Agent implements MarioAgent {
                     walkRight(action);
                 } else {
                     state = State.IDLE;
-                    System.out.println("Landed stomp, back to idle.");
                 }
                 break;
 
             // Clearing state: jump over gap or obstacle, wait to land
             case CLEARING:
-                if (!model.isMarioOnGround()) {
-                    if (jumpHoldFrames < OBSTACLE_JUMP_HOLD) {
-                        action[MarioActions.JUMP.getValue()] = true;
-                        jumpHoldFrames++;
-                    } else {
-                        action[MarioActions.JUMP.getValue()] = false;
-                    }
-                    walkRight(action);
+
+                action[MarioActions.JUMP.getValue()] = true;
+                runRight(action);
+
+                if (jumpCounter < 15) {
+                    System.out.println("Jumping to clear obstacle or gap!");
+                    action[MarioActions.JUMP.getValue()] = true;
+                    jumpCounter++;
                 } else {
+                    System.out.println("Max jump hold reached");
+                    action[MarioActions.JUMP.getValue()] = false;
+                    action[MarioActions.SPEED.getValue()] = false;
                     state = State.IDLE;
-                    System.out.println("Landed clearing jump, back to idle.");
+                    jumpCounter = 0;
                 }
+
+                walkRight(action);
                 break;
 
             // Bonking to hit blocks state: pause, jump to hit block, wait to land
@@ -163,12 +180,9 @@ public class Agent implements MarioAgent {
                         action[MarioActions.JUMP.getValue()] = false;
                         bonkCounter++;
 
-                        if (bonkCounter >= 15) {
+                        if (bonkCounter >= 5) {
                             bonkPhase = BonkPhase.JUMPING;
                             bonkCounter = 0;
-                            System.out.println("Pause finished, starting jump...");
-                        } else {
-                            System.out.println("Standing still under block... " + bonkCounter);
                         }
                         break;
 
@@ -179,11 +193,9 @@ public class Agent implements MarioAgent {
                             action[MarioActions.LEFT.getValue()] = false;
                             action[MarioActions.RIGHT.getValue()] = false;
                             bonkCounter++;
-                            System.out.println("Bonking jump... " + bonkCounter);
                         } else {
                             action[MarioActions.JUMP.getValue()] = false;
                             bonkPhase = BonkPhase.LANDING;
-                            System.out.println("Jump finished, waiting to land...");
                         }
                         break;
 
@@ -198,12 +210,12 @@ public class Agent implements MarioAgent {
                             bonkPhase = BonkPhase.PAUSING;
                             bonkCounter = 0;
                             walkRight(action);
-                            System.out.println("Finished bonking, back to idle.");
                         }
                         break;
                 }
                 break;
 
+            // Items state machine
         }
 
         return action;

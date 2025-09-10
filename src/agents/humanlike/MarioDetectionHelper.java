@@ -21,10 +21,10 @@ public class MarioDetectionHelper {
         int marioY = marioTilePos[1];
 
         // Check the tiles directly above Mario (including diagonals)
-        for (int dx = -2; dx <= 2; dx++) {
+        for (int dx = 0; dx <= 2; dx++) {
 
             // Check up to 15 tiles above Mario
-            for (int dy = 1; dy <= 15; dy++) {
+            for (int dy = 1; dy <= 8; dy++) {
                 int checkX = marioX + dx;       // Check left, center, right
                 int checkY = marioY - dy;       // Check above Mario
 
@@ -36,13 +36,13 @@ public class MarioDetectionHelper {
 
                 // If we hit a used block, stop checking upwards in this column
                 if (Object == OBS_USED_BLOCK) {
-                    System.out.println("Used block above");
+//                    System.out.println("Used block above");
                     return false;
                 }
 
                 // If we hit a solid block, stop checking upwards in this column
                 if (Object == OBS_QUESTION_BLOCK) {
-                    System.out.println("Under question block");
+//                    System.out.println("Under question block");
                     return true;
                 }
             }
@@ -63,10 +63,10 @@ public class MarioDetectionHelper {
         for (int y = 7; y <= 9; y++) {
 
             // Check horizontally in front of Mario
-            for (int x = 8; x <= 12; x++) {
+            for (int x = 4; x <= 15; x++) {
 
                 // Return true if an enemy is detected in the danger zone
-                if (!(x == 8 && y == 8) && enemiesFromBitmap[x][y] == 1) {
+                if (!(x == 4 && y == 8) && enemiesFromBitmap[x][y] == 1) {
                     System.out.println("Danger from enemies");
                     return true;
                 }
@@ -95,6 +95,19 @@ public class MarioDetectionHelper {
         return false;
     }
 
+    public static boolean obstaclesIncoming(byte[][] levelSceneFromBitmap) {
+    for (int y = 8; y <= 8; y++) {
+        for (int x = 9; x <= 12; x++) {
+            if (levelSceneFromBitmap[x][y] == 1) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
     /**
      * Check if it is safe to jump
      * @author This function is taken from the GlennHartmann agent
@@ -105,7 +118,7 @@ public class MarioDetectionHelper {
     public static boolean safeToJump(byte[][] levelSceneFromBitmap, byte[][] enemiesFromBitmap) {
 
         if (safeToJumpFromGaps(levelSceneFromBitmap) && safeToJumpFromEnemies(enemiesFromBitmap)) {
-            System.out.println("Safe to jump");
+//            System.out.println("Safe to jump");
             return true;
         }
         return false;
@@ -121,13 +134,13 @@ public class MarioDetectionHelper {
         for (int y = 5; y <= 9; y++) {
             for (int x = 11; x <= 14; x++) {
                 if (!(x == 8 && y == 8) && enemiesFromBitmap[x][y] == 1) {
-                    System.out.println("Not safe to jump from enemies");
+//                    System.out.println("Not safe to jump from enemies");
                     return false;
                 }
             }
         }
 
-        System.out.println("Safe to jump from enemies");
+//        System.out.println("Safe to jump from enemies");
         return true;
     }
 
@@ -166,27 +179,7 @@ public class MarioDetectionHelper {
         for (int y = 8; y <= 8; y++) {
             for (int x = 9; x <= 12; x++) {
                 if (levelSceneFromBitmap[x][y] == 1) {
-                    System.out.println("Block in front");
-                    return true;
-                }
-            }
-        }
-
-        System.out.println("Clear in front");
-        return false;
-    }
-
-    /**
-     * Check if there is an enemy close ahead of Mario
-     * @param enemiesFromBitmap the enemies observation
-     * @return true if there is an enemy close ahead, false otherwise
-     */
-    public static boolean enemyAheadClose(byte[][] enemiesFromBitmap) {
-        // Check small window directly in front of Mario
-        for (int y = 7; y <= 9; y++) {        // Mario's foot level
-            for (int x = 9; x <= 11; x++) {   // just a few tiles ahead
-                if (enemiesFromBitmap[x][y] == 1) {
-                    System.out.println("Enemy close ahead!");
+//                    System.out.println("Block in front");
                     return true;
                 }
             }
