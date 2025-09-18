@@ -10,7 +10,7 @@ import static agents.humanlike.MarioDetectionHelper.*;
 
 public class Agent implements MarioAgent {
 
-    private enum State { IDLE, PREPARING, STOMPING, BONKING, CLEARING }
+    private enum State { IDLE, PREPARING, STOMPING, BONKING, CLEARING, CHASING }
     private State state = State.IDLE;
 
     private enum BonkPhase { PAUSING, JUMPING, LANDING }
@@ -66,6 +66,7 @@ public class Agent implements MarioAgent {
     public boolean[] getActions(MarioForwardModel model, MarioTimer timer) {
         byte[][] levelSceneFromBitmap = decode(model, model.getMarioSceneObservation()); // map of the scene
         byte[][] enemiesFromBitmap = decode(model, model.getMarioEnemiesObservation()); // map of enemies
+        Powerup powerup = powerupAbove(model, levelSceneFromBitmap);
 
         // State machine for Mario's behavior
         switch (state) {
@@ -107,6 +108,21 @@ public class Agent implements MarioAgent {
                     break;
                 }
 
+                // Check for power-ups
+//                if (powerup == Powerup.MUSHROOM) {
+//                    System.out.println("Mushroom detected above");
+//                    standStill(action);
+//                    state = State.CHASING;
+//                    bonkCounter = 0;
+//                    break;
+//                } else if (powerup == Powerup.FIRE_FLOWER) {
+//                    System.out.println("Fire flower detected above");
+//                    standStill(action);
+//                    state = State.CHASING; // This needs to be changed, because the fire flower doesn't move.
+//                    bonkCounter = 0;
+//                    break;
+//                }
+
                 // Continue walking right if nothing special
                 walkRight(action);
 
@@ -114,15 +130,9 @@ public class Agent implements MarioAgent {
 
 
             // Preparing to stomp: walk left for a short duration or until close to en
-            // This should be changed....
             case PREPARING:
 
-                System.out.println("Preparing to stomp");
-
 //                long elapsed = System.currentTimeMillis() - walkStartTime;
-
-
-                    System.out.println("Ready to stomp");
 
                     if (model.mayMarioJump() || model.isMarioOnGround()) {
                         state = State.STOMPING;
@@ -130,7 +140,6 @@ public class Agent implements MarioAgent {
                         action[MarioActions.JUMP.getValue()] = true;
                         walkRight(action);
                         maxJumpHold = STOMP_JUMP_HOLD;
-                        System.out.println("Jumping to stomp enemy!");
                     }
                 break;
 
@@ -196,6 +205,7 @@ public class Agent implements MarioAgent {
                         } else {
                             action[MarioActions.JUMP.getValue()] = false;
                             bonkPhase = BonkPhase.LANDING;
+//                            bonkCounter = 0;
                         }
                         break;
 
@@ -206,6 +216,34 @@ public class Agent implements MarioAgent {
                             standStill(action);
                         } else {
                             action[MarioActions.JUMP.getValue()] = false;
+
+                            //                The following was us starting to figure out how to work on items, but it wasn't finalized.
+//                            if (bonkCounter <= 20) {
+//                                System.out.println("First checkpoint");
+//                                walkRight(action);
+//                                bonkPhase = BonkPhase.LANDING;
+//                                bonkCounter++;
+//                                break;
+//                            } else if (bonkCounter <= 30) {
+//                                System.out.println("Second checkpoint");
+//                                standStill(action);
+//                                bonkPhase = BonkPhase.LANDING;
+//                                bonkCounter++;
+//                                break;
+//                            } else if (bonkCounter <= 52) {
+//                                System.out.println("Third checkpoint");
+//                                walkLeft(action);
+//                                bonkPhase = BonkPhase.LANDING;
+//                                bonkCounter++;
+//                                break;
+//                            } else if (bonkCounter <= 80) {
+//                                System.out.println("Fourth checkpoint");
+//                                standStill(action);
+//                                bonkPhase = BonkPhase.LANDING;
+//                                bonkCounter++;
+//                                break;
+//                            }
+
                             state = State.IDLE;
                             bonkPhase = BonkPhase.PAUSING;
                             bonkCounter = 0;
@@ -214,6 +252,18 @@ public class Agent implements MarioAgent {
                         break;
                 }
                 break;
+
+
+//                The following was us starting to figure out how to work on items, but it wasn't finalized.
+
+//            case CHASING:
+//                if (model.getMarioMode() == 0) {
+//                    standStill(action);
+//                } else if (model.getMarioMode() == 1) {
+//                    state = State.IDLE;
+//                }
+//
+//                break;
 
             // Items state machine
         }

@@ -1,11 +1,15 @@
 package agents.humanlike;
 
 import engine.core.MarioForwardModel;
-
-import static engine.core.MarioForwardModel.OBS_QUESTION_BLOCK;
-import static engine.core.MarioForwardModel.OBS_USED_BLOCK;
+import static engine.core.MarioForwardModel.*;
 
 public class MarioDetectionHelper {
+
+    public enum Powerup {
+        MUSHROOM,
+        FIRE_FLOWER,
+        NONE
+    };
 
     /**
      * Check if Mario is under a question block
@@ -50,6 +54,37 @@ public class MarioDetectionHelper {
 
         return false;   // No question block found above Mario
     }
+
+    public static Powerup powerupAbove(MarioForwardModel model, byte[][] scene) {
+        // Get Mario's position in tile coordinates
+        int[] marioTilePos = model.getMarioScreenTilePos();
+        int marioX = marioTilePos[0];
+        int marioY = marioTilePos[1];
+
+        // Check the tiles directly above Mario (including diagonals)
+        for (int dx = 0; dx <= 2; dx++) {
+
+            // Check up to 15 tiles above Mario
+            for (int dy = 1; dy <= 20; dy++) {
+                int checkX = marioX + dx;       // Check left, center, right
+                int checkY = marioY - dy;       // Check above Mario
+
+                // Ensure we don't go out of bounds
+                if (checkX < 0 || checkX >= model.obsGridWidth || checkY < 0) continue;
+
+                int[][] levelScene = model.getMarioSceneObservation(0);  // Get the level scene observation
+                int Object = levelScene[checkX][checkY];                // Get the object at the checked position
+
+//                System.out.println("Current object: " + Object);
+
+                // If we hit a used block, stop checking upwards in this column
+                if (Object == OBS_MUSHROOM) return Powerup.MUSHROOM;
+                else if (Object == OBS_FIRE_FLOWER) return Powerup.FIRE_FLOWER;
+            }
+        }
+        return Powerup.NONE;
+    }
+
 
     /**
      * Check if there is danger from enemies in front of Mario
