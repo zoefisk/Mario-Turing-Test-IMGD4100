@@ -1,64 +1,87 @@
-package levelGenerators.notch;
+package levelGenerators.BusaFiskGenerator;
 
+import java.nio.channels.Pipe;
+import java.util.Random;
+
+import engine.core.MarioForwardModel;
 import engine.core.MarioLevelGenerator;
 import engine.core.MarioLevelModel;
 import engine.core.MarioTimer;
-
-import java.util.Random;
+import engine.sprites.Mario;
 
 public class LevelGenerator implements MarioLevelGenerator {
-    private static final int ODDS_STRAIGHT = 0;
-    private static final int ODDS_HILL_STRAIGHT = 1;
-    private static final int ODDS_TUBES = 2;
-    private static final int ODDS_JUMP = 3;
-    private static final int ODDS_CANNONS = 4;
+
+    LevelType levelType;
+    int difficulty;
+
+    private final static int STRAIGHT_ODDS = 0;
+    private final static int HILL_ODDS = 1;
+    private final static int PIPE_ODDS = 2;
+    private final static int CANNON_ODDS = 3;
+    private final static int JUMP_ODDS = 4;
 
     private int[] odds = new int[5];
     private int totalOdds;
-    private int difficulty;
-    private int type;
     private Random random;
 
-    public LevelGenerator() {
-        random = new Random();
-        this.type = random.nextInt(3);
-        this.difficulty = random.nextInt(5);
-    }
 
-    public LevelGenerator(int type, int difficulty) {
-        random = new Random();
-        this.type = type;
-        this.difficulty = difficulty;
-    }
+    public int buildChunk(MarioLevelModel level, int length, int levelLength){
+        int result = random.nextInt(totalOdds);
+        int chunkType = 0;
 
-    public LevelGenerator(int type, int difficulty, Random random) {
-        this.random = random;
-        this.type = type;
-        this.difficulty = difficulty;
-    }
-
-    private int buildZone(MarioLevelModel model, int x, int maxLength) {
-        int t = random.nextInt(totalOdds);
-        int type = 0;
-        for (int i = 0; i < odds.length; i++) {
-            if (odds[i] <= t) {
-                type = i;
+        for (int i = 0; i < odds.length; i++){
+            if (odds[i] <= result){
+                chunkType = i;
             }
         }
 
-        switch (type) {
-            case ODDS_STRAIGHT:
-                return buildStraight(model, x, maxLength, false);
-            case ODDS_HILL_STRAIGHT:
-                return buildHillStraight(model, x, maxLength);
-            case ODDS_TUBES:
-                return buildTubes(model, x, maxLength);
-            case ODDS_JUMP:
-                return buildJump(model, x, maxLength);
-            case ODDS_CANNONS:
-                return buildCannons(model, x, maxLength);
+        switch (chunkType) {
+            case STRAIGHT_ODDS:
+                return buildStraight(level, length, levelLength, false);
+            case JUMP_ODDS:
+                return buildJump(level, length, levelLength);
+            case PIPE_ODDS:
+                return buildTubes(level, length, levelLength);
         }
+
         return 0;
+    }
+
+    public LevelGenerator() {
+//        this.levelType = new LevelType("Overground", "map address");
+    }
+
+//    public LevelGenerator(LevelType levelType, int difficulty) {
+//        this.levelType = levelType;
+//    }
+
+    @Override
+    public String getGeneratedLevel(MarioLevelModel model, MarioTimer timer) {
+        model.clearMap();
+
+
+
+
+        // Use this once we figure out level type stuff
+//        String levelName = levelType.getName();
+//        switch (levelName) {
+//            case "Overground":
+//                // Generate overground level
+//                break;
+//            case "Underground":
+//                // Generate underground level
+//                break;
+//            case "Castle":
+//                // Generate castle level
+//                break;
+//            case "Sky":
+//                // Generate sky level
+//                break;
+//            default:
+//                break;
+//        }
+
+        return model.getMap();
     }
 
     private int buildJump(MarioLevelModel model, int xo, int maxLength) {
@@ -308,63 +331,8 @@ public class LevelGenerator implements MarioLevelGenerator {
     }
 
     @Override
-    public String getGeneratedLevel(MarioLevelModel model, MarioTimer timer) {
-        model.clearMap();
-
-        odds[ODDS_STRAIGHT] = 20;
-        odds[ODDS_HILL_STRAIGHT] = 10;
-        odds[ODDS_TUBES] = 2 + 1 * difficulty;
-        odds[ODDS_JUMP] = 2 * difficulty;
-        odds[ODDS_CANNONS] = -10 + 5 * difficulty;
-
-        if (type > 0) {
-            odds[ODDS_HILL_STRAIGHT] = 0;
-        }
-
-        for (int i = 0; i < odds.length; i++) {
-            if (odds[i] < 0)
-                odds[i] = 0;
-            totalOdds += odds[i];
-            odds[i] = totalOdds - odds[i];
-        }
-
-        int length = 0;
-        length += buildStraight(model, 0, model.getWidth(), true);
-        while (length < model.getWidth()) {
-            length += buildZone(model, length, model.getWidth() - length);
-        }
-
-        int floor = model.getHeight() - 1 - random.nextInt(4);
-
-        for (int x = length; x < model.getWidth(); x++) {
-            for (int y = 0; y < model.getHeight(); y++) {
-                if (y >= floor) {
-                    model.setBlock(x, y, MarioLevelModel.GROUND);
-                }
-            }
-        }
-
-        if (type > 0) {
-            int ceiling = 0;
-            int run = 0;
-            for (int x = 0; x < model.getWidth(); x++) {
-                if (run-- <= 0 && x > 4) {
-                    ceiling = random.nextInt(4);
-                    run = random.nextInt(4) + 4;
-                }
-                for (int y = 0; y < model.getHeight(); y++) {
-                    if ((x > 4 && y <= ceiling) || x < 1) {
-                        model.setBlock(x, y, MarioLevelModel.NORMAL_BRICK);
-                    }
-                }
-            }
-        }
-        System.out.println(model.getMap());
-        return model.getMap();
-    }
-
-    @Override
     public String getGeneratorName() {
-        return "NotchLevelGenerator";
+        return "BusaFiskGenerator";
     }
+
 }
