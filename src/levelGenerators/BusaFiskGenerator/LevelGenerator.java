@@ -1,17 +1,14 @@
 package levelGenerators.BusaFiskGenerator;
 
-import java.nio.channels.Pipe;
 import java.util.Random;
 
-import engine.core.MarioForwardModel;
 import engine.core.MarioLevelGenerator;
 import engine.core.MarioLevelModel;
 import engine.core.MarioTimer;
-import engine.sprites.Mario;
 
 public class LevelGenerator implements MarioLevelGenerator {
 
-    LevelType levelType;
+    LevelAesthetic levelAesthetic;
     int difficulty;
 
     private final static int STRAIGHT_ODDS = 0;

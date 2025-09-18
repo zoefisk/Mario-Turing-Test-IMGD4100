@@ -12,7 +12,7 @@ import engine.helper.Assets;
 
 public class MarioBackground extends MarioGraphics {
     private Image image;
-    private int levelType;
+    private int levelAesthetic;
     private Graphics2D g;
     private int screenWidth;
 
@@ -21,7 +21,7 @@ public class MarioBackground extends MarioGraphics {
         this.width = indeces[0].length * 16;
         this.height = indeces.length * 16;
         this.screenWidth = screenWidth;
-        this.levelType = 1;
+        this.levelAesthetic = 1;
 
         image = graphicsConfiguration.createCompatibleImage(width, height, Transparency.BITMASK);
         g = (Graphics2D) image.getGraphics();
@@ -30,12 +30,12 @@ public class MarioBackground extends MarioGraphics {
         updateArea(indeces);
     }
 
-    public MarioBackground(GraphicsConfiguration graphicsConfiguration, int screenWidth, int[][] indeces, int levelType) {
+    public MarioBackground(GraphicsConfiguration graphicsConfiguration, int screenWidth, int[][] indeces, int levelAesthetic) {
         super();
         this.width = indeces[0].length * 16;
         this.height = indeces.length * 16;
         this.screenWidth = screenWidth;
-        this.levelType = levelType;
+        this.levelAesthetic = levelAesthetic;
 
         image = graphicsConfiguration.createCompatibleImage(width, height, Transparency.BITMASK);
         g = (Graphics2D) image.getGraphics();
@@ -52,7 +52,7 @@ public class MarioBackground extends MarioGraphics {
                 int xTile = indeces[y][x] % 8;
                 int yTile = indeces[y][x] / 8;
 
-                switch (levelType) {
+                switch (levelAesthetic) {
                     case 2:
                         g.drawImage(Assets.levelUnderground[xTile][yTile], x * 16, y * 16, 16, 16, null);
                         break;
