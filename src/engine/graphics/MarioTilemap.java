@@ -13,13 +13,15 @@ public class MarioTilemap extends MarioGraphics {
     public int[][] indexShift;
     public float[][] moveShift;
     public int animationIndex;
+    public int levelAesthetic;
 
-    public MarioTilemap(Image[][] sheet, int[][] currentIndeces) {
+    public MarioTilemap(Image[][] sheet, int[][] currentIndeces, int levelAesthetic) {
         this.sheet = sheet;
         this.currentIndeces = currentIndeces;
         this.indexShift = new int[currentIndeces.length][currentIndeces[0].length];
         this.moveShift = new float[currentIndeces.length][currentIndeces[0].length];
         this.animationIndex = 0;
+        this.levelAesthetic = levelAesthetic;
     }
 
     @Override

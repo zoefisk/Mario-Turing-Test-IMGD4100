@@ -21,6 +21,9 @@ public class MarioWorld {
     public float cameraY;
     public Mario mario;
     public MarioLevel level;
+
+    public int levelAesthetic;
+
     public boolean visuals;
     public int currentTick;
     //Status
@@ -38,7 +41,8 @@ public class MarioWorld {
 
     private MarioBackground[] backgrounds = new MarioBackground[2];
 
-    public MarioWorld(MarioEvent[] killEvents) {
+    public MarioWorld(MarioEvent[] killEvents, int levelAesthetic) {
+        this.levelAesthetic = levelAesthetic;
         this.pauseTimer = 0;
         this.gameStatus = GameStatus.RUNNING;
         this.sprites = new ArrayList<>();
@@ -70,7 +74,7 @@ public class MarioWorld {
                 new int[]{42},
                 new int[]{42}
         };
-        backgrounds[0] = new MarioBackground(graphicsConfig, MarioGame.width, tempBackground);
+        backgrounds[0] = new MarioBackground(graphicsConfig, MarioGame.width, tempBackground, levelAesthetic);
         tempBackground = new int[][]{
                 new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                 new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -82,12 +86,12 @@ public class MarioWorld {
                 new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                 new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         };
-        backgrounds[1] = new MarioBackground(graphicsConfig, MarioGame.width, tempBackground);
+        backgrounds[1] = new MarioBackground(graphicsConfig, MarioGame.width, tempBackground, levelAesthetic);
     }
 
     public void initializeLevel(String level, int timer) {
         this.currentTimer = timer;
-        this.level = new MarioLevel(level, this.visuals);
+        this.level = new MarioLevel(level, levelAesthetic, this.visuals);
 
         this.mario = new Mario(this.visuals, this.level.marioTileX * 16, this.level.marioTileY * 16);
         this.mario.alive = true;
@@ -106,7 +110,7 @@ public class MarioWorld {
     }
 
     public MarioWorld clone() {
-        MarioWorld world = new MarioWorld(this.killEvents);
+        MarioWorld world = new MarioWorld(this.killEvents, 1);
         world.visuals = false;
         world.cameraX = this.cameraX;
         world.cameraY = this.cameraY;

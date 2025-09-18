@@ -21,6 +21,12 @@ public class Assets {
     public static Image[][] enemies;
     public static Image[][] items;
     public static Image[][] level;
+
+    // ADDING THIS
+    public static Image[][] levelUnderground;
+    public static Image[][] levelCastle;
+    public static Image[][] levelSky;
+
     public static Image[][] particles;
     public static Image[][] font;
     public static Image[][] map;
@@ -35,6 +41,11 @@ public class Assets {
             enemies = cutImage(gc, "enemysheet.png", 16, 32);
             items = cutImage(gc, "itemsheet.png", 16, 16);
             level = cutImage(gc, "mapsheet.png", 16, 16);
+
+            levelUnderground = cutImage(gc, "level_underground.png", 16, 16);
+            levelCastle = cutImage(gc, "level_castle.png", 16, 16);
+            levelSky = cutImage(gc, "level_sky.png", 16, 16);
+
             particles = cutImage(gc, "particlesheet.png", 16, 16);
             font = cutImage(gc, "font.gif", 8, 8);
         } catch (Exception e) {

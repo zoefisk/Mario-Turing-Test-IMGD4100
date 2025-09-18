@@ -12,6 +12,7 @@ import engine.helper.Assets;
 
 public class MarioBackground extends MarioGraphics {
     private Image image;
+    private int levelType;
     private Graphics2D g;
     private int screenWidth;
 
@@ -20,6 +21,21 @@ public class MarioBackground extends MarioGraphics {
         this.width = indeces[0].length * 16;
         this.height = indeces.length * 16;
         this.screenWidth = screenWidth;
+        this.levelType = 1;
+
+        image = graphicsConfiguration.createCompatibleImage(width, height, Transparency.BITMASK);
+        g = (Graphics2D) image.getGraphics();
+        g.setComposite(AlphaComposite.Src);
+
+        updateArea(indeces);
+    }
+
+    public MarioBackground(GraphicsConfiguration graphicsConfiguration, int screenWidth, int[][] indeces, int levelType) {
+        super();
+        this.width = indeces[0].length * 16;
+        this.height = indeces.length * 16;
+        this.screenWidth = screenWidth;
+        this.levelType = levelType;
 
         image = graphicsConfiguration.createCompatibleImage(width, height, Transparency.BITMASK);
         g = (Graphics2D) image.getGraphics();
@@ -35,7 +51,22 @@ public class MarioBackground extends MarioGraphics {
             for (int y = 0; y < indeces.length; y++) {
                 int xTile = indeces[y][x] % 8;
                 int yTile = indeces[y][x] / 8;
-                g.drawImage(Assets.level[xTile][yTile], x * 16, y * 16, 16, 16, null);
+
+                switch (levelType) {
+                    case 2:
+                        g.drawImage(Assets.levelUnderground[xTile][yTile], x * 16, y * 16, 16, 16, null);
+                        break;
+                    case 3:
+                        g.drawImage(Assets.levelCastle[xTile][yTile], x * 16, y * 16, 16, 16, null);
+                        break;
+                    case 4:
+                        g.drawImage(Assets.levelSky[xTile][yTile], x * 16, y * 16, 16, 16, null);
+                        break;
+                    case 1:
+                    default:
+                        g.drawImage(Assets.level[xTile][yTile], x * 16, y * 16, 16, 16, null);
+                        break;
+                }
             }
         }
     }

@@ -95,7 +95,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult playGame(String level, int timer) {
-        return this.runGame(new Agent(), level, timer, 0, true, 30, 2);
+        return this.runGame(new Agent(), level, 1, timer, 0, true, 30, 2);
     }
 
     /**
@@ -107,7 +107,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult playGame(String level, int timer, int marioState) {
-        return this.runGame(new Agent(), level, timer, marioState, true, 30, 2);
+        return this.runGame(new Agent(), level, 1, timer, marioState, true, 30, 2);
     }
 
     /**
@@ -120,7 +120,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult playGame(String level, int timer, int marioState, int fps) {
-        return this.runGame(new Agent(), level, timer, marioState, true, fps, 2);
+        return this.runGame(new Agent(), level, 1, timer, marioState, true, fps, 2);
     }
 
     /**
@@ -134,7 +134,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult playGame(String level, int timer, int marioState, int fps, float scale) {
-        return this.runGame(new Agent(), level, timer, marioState, true, fps, scale);
+        return this.runGame(new Agent(), level, 1, timer, marioState, true, fps, scale);
     }
 
     /**
@@ -146,7 +146,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult runGame(MarioAgent agent, String level, int timer) {
-        return this.runGame(agent, level, timer, 0, false, 0, 2);
+        return this.runGame(agent, level, 1, timer, 0, false, 0, 2);
     }
 
     /**
@@ -159,7 +159,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult runGame(MarioAgent agent, String level, int timer, int marioState) {
-        return this.runGame(agent, level, timer, marioState, false, 0, 2);
+        return this.runGame(agent, level, 1, timer, marioState, false, 0, 2);
     }
 
     /**
@@ -172,8 +172,8 @@ public class MarioGame {
      * @param visuals    show the game visuals if it is true and false otherwise
      * @return statistics about the current game
      */
-    public MarioResult runGame(MarioAgent agent, String level, int timer, int marioState, boolean visuals) {
-        return this.runGame(agent, level, timer, marioState, visuals, visuals ? 30 : 0, 2);
+    public MarioResult runGame(MarioAgent agent, String level, int levelAesthetic, int timer, int marioState, boolean visuals) {
+        return this.runGame(agent, level, levelAesthetic, timer, marioState, visuals, visuals ? 30 : 0, 2);
     }
 
     /**
@@ -188,7 +188,7 @@ public class MarioGame {
      * @return statistics about the current game
      */
     public MarioResult runGame(MarioAgent agent, String level, int timer, int marioState, boolean visuals, int fps) {
-        return this.runGame(agent, level, timer, marioState, visuals, fps, 2);
+        return this.runGame(agent, level, 1, timer, marioState, visuals, fps, 2);
     }
 
     /**
@@ -203,7 +203,7 @@ public class MarioGame {
      * @param scale      the screen scale, that scale value is multiplied by the actual width and height
      * @return statistics about the current game
      */
-    public MarioResult runGame(MarioAgent agent, String level, int timer, int marioState, boolean visuals, int fps, float scale) {
+    public MarioResult runGame(MarioAgent agent, String level, int levelAesthetic, int timer, int marioState, boolean visuals, int fps, float scale) {
         if (visuals) {
             this.window = new JFrame("Mario AI Framework");
             this.render = new MarioRender(scale);
@@ -215,11 +215,11 @@ public class MarioGame {
             this.window.setVisible(true);
         }
         this.setAgent(agent);
-        return this.gameLoop(level, timer, marioState, visuals, fps);
+        return this.gameLoop(level, levelAesthetic, timer, marioState, visuals, fps);
     }
 
-    private MarioResult gameLoop(String level, int timer, int marioState, boolean visual, int fps) {
-        this.world = new MarioWorld(this.killEvents);
+    private MarioResult gameLoop(String level, int levelAesthetic, int timer, int marioState, boolean visual, int fps) {
+        this.world = new MarioWorld(this.killEvents, levelAesthetic);
         this.world.visuals = visual;
         this.world.initializeLevel(level, 1000 * timer);
         if (visual) {

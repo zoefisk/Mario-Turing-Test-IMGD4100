@@ -18,13 +18,17 @@ public class MarioLevel {
     public int totalCoins = 0;
     public int marioTileX, marioTileY, exitTileX, exitTileY;
 
+    public int levelAesthetic;
+
     private int[][] levelTiles;
     private SpriteType[][] spriteTemplates;
     private int[][] lastSpawnTime;
     private MarioTilemap graphics;
     private MarioImage flag;
 
-    public MarioLevel(String level, boolean visuals) {
+    public MarioLevel(String level, int levelAesthetic, boolean visuals) {
+        this.levelAesthetic = levelAesthetic;
+
         if (level.trim().length() == 0) {
             this.tileWidth = 0;
             this.width = 0;
@@ -263,15 +267,33 @@ public class MarioLevel {
         this.levelTiles[this.exitTileX][Math.max(1, this.exitTileY - 11)] = 39;
 
         if (visuals) {
-            this.graphics = new MarioTilemap(Assets.level, this.levelTiles);
-            this.flag = new MarioImage(Assets.level, 41);
+
+            switch (levelAesthetic) {
+                case 2:
+                    this.graphics = new MarioTilemap(Assets.levelUnderground, this.levelTiles, levelAesthetic);
+                    this.flag = new MarioImage(Assets.levelUnderground, 41);
+                    break;
+                case 3:
+                    this.graphics = new MarioTilemap(Assets.levelCastle, this.levelTiles, levelAesthetic);
+                    this.flag = new MarioImage(Assets.levelCastle, 41);
+                    break;
+                case 4:
+                    this.graphics = new MarioTilemap(Assets.levelSky, this.levelTiles, levelAesthetic);
+                    this.flag = new MarioImage(Assets.levelSky, 41);
+                    break;
+                case 1:
+                default:
+                    this.graphics = new MarioTilemap(Assets.level, this.levelTiles, levelAesthetic);
+                    this.flag = new MarioImage(Assets.level, 41);
+            }
+
             this.flag.width = 16;
             this.flag.height = 16;
         }
     }
 
     public MarioLevel clone() {
-        MarioLevel level = new MarioLevel("", false);
+        MarioLevel level = new MarioLevel("", this.levelAesthetic, false);
         level.width = this.width;
         level.height = this.height;
         level.tileWidth = this.tileWidth;
