@@ -8,8 +8,8 @@ import engine.core.MarioTimer;
 
 public class LevelGenerator implements MarioLevelGenerator {
 
-    LevelAesthetic levelAesthetic;
-    int difficulty;
+    int difficulty;         // 1-5, 1 being easiest, 5 being hardest
+    int levelAesthetic;     // 1: regular level, 2: underground, 3: castle, 4: sky
 
     private final static int STRAIGHT_ODDS = 0;
     private final static int HILL_ODDS = 1;
@@ -21,66 +21,99 @@ public class LevelGenerator implements MarioLevelGenerator {
     private int totalOdds;
     private Random random;
 
+    public LevelGenerator(String type, int attribute) {
+        random = new Random();
+        if (type == "difficulty") this.difficulty = attribute;
+        else if (type == "levelAesthetic") this.levelAesthetic = attribute;
+        else throw new IllegalArgumentException("Type must be either 'difficulty' or 'levelAesthetic'");
 
-    public int buildChunk(MarioLevelModel level, int length, int levelLength){
-        int result = random.nextInt(totalOdds);
-        int chunkType = 0;
-
-        for (int i = 0; i < odds.length; i++){
-            if (odds[i] <= result){
-                chunkType = i;
-            }
-        }
-
-        switch (chunkType) {
-            case STRAIGHT_ODDS:
-                return buildStraight(level, length, levelLength, false);
-            case JUMP_ODDS:
-                return buildJump(level, length, levelLength);
-            case PIPE_ODDS:
-                return buildTubes(level, length, levelLength);
-        }
-
-        return 0;
+        //this.levelAesthetic = new Random().nextInt(4) + 1; // Generates a random aesthetic between 1 and 4
     }
 
-    public LevelGenerator() {
-//        this.levelType = new LevelType("Overground", "map address");
+    public LevelGenerator(int difficulty, int levelAesthetic) {
+        random = new Random();
+        this.difficulty = difficulty;
+        this.levelAesthetic = levelAesthetic;
     }
-
-//    public LevelGenerator(LevelType levelType, int difficulty) {
-//        this.levelType = levelType;
-//    }
 
     @Override
     public String getGeneratedLevel(MarioLevelModel model, MarioTimer timer) {
+
+        System.out.println("Generating level");
+        System.out.println("Difficutly is " + difficulty);
         model.clearMap();
 
+        int straightOdds = 30;
+        int jumpOdds = 10 * difficulty;
+        int pipeOdds = 15;
+        int hillOdds = 8 * difficulty;
+        int cannonOdds = 5 * difficulty;
 
+        //Changes chunk odds if a sky level
+        if (levelAesthetic == 4){
+            cannonOdds += 10;
+            jumpOdds += 10;
+        }else if (levelAesthetic == 2) {
+            hillOdds = 0;
+            cannonOdds -= 5;
+        } else if (levelAesthetic == 3){
+            pipeOdds -= 7;
+        }
 
+        totalOdds = straightOdds + jumpOdds + pipeOdds + hillOdds + cannonOdds;
 
-        // Use this once we figure out level type stuff
-//        String levelName = levelType.getName();
-//        switch (levelName) {
-//            case "Overground":
-//                // Generate overground level
-//                break;
-//            case "Underground":
-//                // Generate underground level
-//                break;
-//            case "Castle":
-//                // Generate castle level
-//                break;
-//            case "Sky":
-//                // Generate sky level
-//                break;
-//            default:
-//                break;
-//        }
+        int rand = 0;
 
+        int length = 0;
+        length += buildStraight(model, 0, model.getWidth(), true);
+        while (length <= model.getWidth()){
+
+            rand = random.nextInt(totalOdds);
+
+            if (rand <= straightOdds) {
+                length += buildStraight(model, length, model.getWidth(), false);
+            } else if (rand <= straightOdds + jumpOdds){
+                length += buildJump(model, length, model.getWidth());
+            } else if (rand <= straightOdds + jumpOdds + pipeOdds){
+                length += buildTubes(model, length, model.getWidth());
+            } else if (rand <= straightOdds + jumpOdds + pipeOdds + cannonOdds) {
+                length += buildCannons(model, length, model.getWidth());
+            } else if (rand <= straightOdds + jumpOdds + pipeOdds + cannonOdds + hillOdds){
+                length += buildHillStraight(model, length, model.getWidth());
+            }
+        }
+
+        //Build a cave ceiling
+        if (levelAesthetic == 2) {
+            int ceiling = 0;
+            int run = 0;
+            for (int x = 0; x < model.getWidth(); x++) {
+                if (run-- <= 0 && x > 4) {
+                    ceiling = random.nextInt(4);
+                    run = random.nextInt(4) + 4;
+                }
+                for (int y = 0; y < model.getHeight(); y++) {
+                    if ((x > 4 && y <= ceiling) || x < 1) {
+                        model.setBlock(x, y, MarioLevelModel.NORMAL_BRICK);
+                    }
+                }
+            }
+        //Build a line ceiling on castle levels
+        }else if (levelAesthetic == 3) {
+            for (int x = 0; x < model.getWidth(); x++) {
+                model.setBlock(5, 0, MarioLevelModel.NORMAL_BRICK);
+                for (int y = 1; y < model.getHeight(); y++) {
+                    if ((x > 4 && y <= 1) || x < 1) {
+                        model.setBlock(x, y, MarioLevelModel.NORMAL_BRICK);
+                    }
+                }
+            }
+        }
+        System.out.println(model.getMap());
         return model.getMap();
     }
 
+    //taken from Notch generator
     private int buildJump(MarioLevelModel model, int xo, int maxLength) {
         int js = random.nextInt(4) + 2;
         int jl = random.nextInt(2) + 2;
@@ -112,6 +145,7 @@ public class LevelGenerator implements MarioLevelGenerator {
         return length;
     }
 
+    //taken from Notch generator
     private int buildCannons(MarioLevelModel model, int xo, int maxLength) {
         int length = random.nextInt(10) + 2;
         if (length > maxLength)
@@ -141,6 +175,7 @@ public class LevelGenerator implements MarioLevelGenerator {
         return length;
     }
 
+    //taken from Notch generator
     private int buildHillStraight(MarioLevelModel model, int xo, int maxLength) {
         int length = random.nextInt(10) + 10;
         if (length > maxLength)
@@ -203,7 +238,12 @@ public class LevelGenerator implements MarioLevelGenerator {
         return length;
     }
 
+
+    //partially taken from Notch generator
+    //Added functionality to make winged enemies more likely on sky levels
     private void addEnemyLine(MarioLevelModel model, int x0, int x1, int y) {
+        int sky = 0;
+        if (levelAesthetic == 4) sky = 5;
         char[] enemies = new char[]{MarioLevelModel.GOOMBA,
                 MarioLevelModel.GREEN_KOOPA,
                 MarioLevelModel.RED_KOOPA,
@@ -216,11 +256,12 @@ public class LevelGenerator implements MarioLevelGenerator {
                 } else if (difficulty < 3) {
                     type = 1 + random.nextInt(3);
                 }
-                model.setBlock(x, y, MarioLevelModel.getWingedEnemyVersion(enemies[type], random.nextInt(35) < difficulty));
+                model.setBlock(x, y, MarioLevelModel.getWingedEnemyVersion(enemies[type], random.nextInt(35) - sky < difficulty));
             }
         }
     }
 
+    //taken from Notch generator
     private int buildTubes(MarioLevelModel model, int xo, int maxLength) {
         int length = random.nextInt(10) + 5;
         if (length > maxLength)
@@ -256,6 +297,7 @@ public class LevelGenerator implements MarioLevelGenerator {
         return length;
     }
 
+    //taken from Notch generator
     private int buildStraight(MarioLevelModel model, int xo, int maxLength, boolean safe) {
         int length = random.nextInt(10) + 2;
         if (safe)
@@ -281,6 +323,7 @@ public class LevelGenerator implements MarioLevelGenerator {
         return length;
     }
 
+    //taken from Notch generator
     private void decorate(MarioLevelModel model, int x0, int x1, int floor) {
         if (floor < 1)
             return;
@@ -327,6 +370,10 @@ public class LevelGenerator implements MarioLevelGenerator {
         }
     }
 
+    /**
+     * Returns the name of the generator
+     * @return String name of the generator
+     */
     @Override
     public String getGeneratorName() {
         return "BusaFiskGenerator";

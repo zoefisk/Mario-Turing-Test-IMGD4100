@@ -3,6 +3,7 @@ import engine.core.MarioLevelGenerator;
 import engine.core.MarioLevelModel;
 import engine.core.MarioResult;
 import engine.core.MarioTimer;
+import java.util.Random;
 
 public class GenerateLevel {
     public static void printResults(MarioResult result) {
@@ -22,7 +23,14 @@ public class GenerateLevel {
     }
 
     public static void main(String[] args) {
-        MarioLevelGenerator generator = new levelGenerators.notch.LevelGenerator();
+        Random random = new Random();
+        int difficulty = random.nextInt(5);
+        int aesthetic = random.nextInt(4);
+
+        aesthetic += difficulty / 3;
+        if (aesthetic > 4) aesthetic = 4;
+//        System.out.println("Aesthetic is " + aesthetic);
+        MarioLevelGenerator generator = new levelGenerators.BusaFiskGenerator.LevelGenerator(difficulty, 3);
         String level = generator.getGeneratedLevel(new MarioLevelModel(150, 16), new MarioTimer(5 * 60 * 60 * 1000));
         MarioGame game = new MarioGame();
 //        printResults(game.playGame(level, 200, 0));

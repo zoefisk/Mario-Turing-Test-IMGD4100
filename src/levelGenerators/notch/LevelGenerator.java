@@ -309,6 +309,7 @@ public class LevelGenerator implements MarioLevelGenerator {
 
     @Override
     public String getGeneratedLevel(MarioLevelModel model, MarioTimer timer) {
+
         model.clearMap();
 
         odds[ODDS_STRAIGHT] = 20;
